@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Recipe, Ingredient, Tag, IngredientRecipe, Follow, Favorite, Cart
+from .models import Recipe, Ingredient, Tag, IngredientRecipe, Follow, Favorite, ShoppingCart
 
 
 class IngredientsInline(admin.TabularInline):
@@ -29,7 +29,7 @@ class FavoriteAdmin(admin.ModelAdmin):
     search_fields = ('author',)
 
 
-class CartAdmin(admin.ModelAdmin):
+class ShoppingCartAdmin(admin.ModelAdmin):
     """
     Админ-зона покупок.
     """
@@ -42,9 +42,9 @@ class IngredientRecipeAdmin(admin.ModelAdmin):
     """
     Админ-зона ингридентов для рецептов.
     """
-    list_display = ('id', 'recipe', 'ingredient',)
+    list_display = ('id', 'recipe', 'ingredient', 'amount',)
     list_filter = ('recipe', 'ingredient')
-    search_fields = ('ingredient',)
+    search_fields = ('name',)
 
 
 class RecipeAdmin(admin.ModelAdmin):
@@ -52,10 +52,10 @@ class RecipeAdmin(admin.ModelAdmin):
     Админ-зона рецептов.
     Добавлен просмотр кол-ва добавленных рецептов в избранное.
     """
-    list_display = ('id', 'author', 'name', 'pub_date', 'in_favorite')
+    list_display = ('id', 'author', 'name', 'pub_date', 'in_favorite', )
     search_fields = ('name',)
-    list_filter = ('pub_date', 'author', 'name', 'tag')
-    filter_horizontal = ('ingredient',)
+    list_filter = ('pub_date', 'author', 'name', 'tags')
+    filter_horizontal = ('ingredients',)
     empty_value_display = '-пусто-'
     inlines = [IngredientsInline]
 
@@ -89,4 +89,4 @@ admin.site.register(Tag, TagAdmin)
 admin.site.register(IngredientRecipe, IngredientRecipeAdmin)
 admin.site.register(Follow, FollowAdmin)
 admin.site.register(Favorite, FavoriteAdmin)
-admin.site.register(Cart, CartAdmin)
+admin.site.register(ShoppingCart, ShoppingCartAdmin)

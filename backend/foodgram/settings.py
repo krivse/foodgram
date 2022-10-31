@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 import os
 
 from dotenv import load_dotenv
+from datetime import timedelta
 
 load_dotenv()
 
@@ -34,6 +35,7 @@ ALLOWED_HOSTS = [
     '127.0.0.1'
 ]
 
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 # Application definition
 
@@ -44,9 +46,13 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
+    'django_filters',
+    'djoser',
+    'rest_framework.authtoken',
     'api',
     'recipes',
-    'users'
+    'users',
 ]
 
 MIDDLEWARE = [
@@ -140,6 +146,36 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 AUTH_USER_MODEL = 'users.User'
 
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+        'rest_framework.permissions.AllowAny',
+    ],
+
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.SessionAuthentication'
+    ],
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.UserRateThrottle',
+        'rest_framework.throttling.AnonRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'user': '10000/day',
+        'anon': '1000/day',
+    },
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 6,
+}
+
+#REST_FRAMEWORK = {
+#    'DEFAULT_RENDERER_CLASSES': [
+#        'rest_framework.renderers.JSONRenderer',
+#        'rest_framework.renderers.BrowsableAPIRenderer',
+#        'rest_framework.renderers.TemplateHTMLRenderer',
+#    ]
+#}
 #if settings.DEBUG:
 #    urlpatterns += static(
 #      settings.MEDIA_URL, document_root=settings.MEDIA_ROOT
