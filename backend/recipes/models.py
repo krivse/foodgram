@@ -1,7 +1,8 @@
 from django.db import models
 from django.core.validators import MinValueValidator
-from users.models import User
 from django.db.models import Q, F
+
+from users.models import User
 
 
 class Ingredient(models.Model):
@@ -124,7 +125,8 @@ class IngredientRecipe(models.Model):
         on_delete=models.CASCADE,
         help_text='Укажите ингредиенты')
     amount = models.PositiveSmallIntegerField(
-        validators=[MinValueValidator(1, 'Минимальное количество ингредиентов 1')],
+        validators=[
+            MinValueValidator(1, 'Минимальное количество ингредиентов 1')],
         verbose_name='Количество',
         help_text='Укажите количество ингредиента')
 

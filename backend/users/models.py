@@ -1,4 +1,5 @@
 from django.db import models
+
 from django.contrib.auth.models import AbstractUser
 
 
@@ -17,7 +18,8 @@ class User(AbstractUser):
     first_name = models.CharField('Имя', max_length=150)
     last_name = models.CharField('Фамилия', max_length=150)
     email = models.EmailField('email-адрес', unique=True)
-    role = models.CharField(max_length=15, choices=ROLE_USER, default=USER, verbose_name='Пользовательская роль')
+    role = models.CharField(max_length=15, choices=ROLE_USER,
+                            default=USER, verbose_name='Пользовательская роль')
     password = models.CharField(max_length=150, verbose_name='Пароль')
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username', 'password', 'first_name', 'last_name']
