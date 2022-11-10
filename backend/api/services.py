@@ -10,14 +10,15 @@ def shopping_cart(self, request, author):
     sum_ingredients_in_recipes = IngredientRecipe.objects.filter(
         recipe__shopping_cart__author=author
     ).values(
-        'ingredient__name', 'ingredient__measurement_unit', 'amount'
+        'ingredient__name', 'ingredient__measurement_unit'
     ).annotate(
-        amounts=Sum('amount')).order_by('amounts')
+        amounts=Sum('amount', distinct=True)).order_by('amounts')
     today = date.today().strftime("%d-%m-%Y")
     shopping_list = f'Список покупок на: {today}\n\n'
     for ingredient in sum_ingredients_in_recipes:
-        shopping_list += f'{ingredient["ingredient__name"]} - '\
-                         f'{ingredient["amount"]} '\
+        print(ingredient)
+        shopping_list += f'{ingredient["ingredient__name"]} - ' \
+                         f'{ingredient["amounts"]} ' \
                          f'{ingredient["ingredient__measurement_unit"]}\n'
     shopping_list += '\n\nFoodgram (2022)'
     filename = 'shopping_list.txt'

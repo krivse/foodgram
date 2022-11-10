@@ -6,14 +6,15 @@ from rest_framework.permissions import AllowAny
 from rest_framework.decorators import action
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
+from rest_framework.permissions import IsAuthenticated, SAFE_METHODS
 
-from recipes.models import Recipe, Tag, Ingredient, Favorite, ShoppingCart
+from recipes.models import Recipe, Tag, Ingredient, Favorite, ShoppingCart, User
 from api.serializers import (
     RecipeListSerializer, TagSerializer, IngredientSerializer, FavoriteSerializer,
     ShoppingCartSerializer, RecipeWriteSerializer)
 from api.services import shopping_cart
 from api.permissions import IsOwnerOrAdminOrReadOnly
-from users.models import User
+from api.filters import IngredientFilter, RecipeFilter
 
 
 class TagViewSet(mixins.ListModelMixin,
@@ -34,75 +35,65 @@ class IngredientViewSet(mixins.ListModelMixin,
     serializer_class = IngredientSerializer
     permission_classes = (AllowAny, )
     pagination_class = None
+    filter_backends = (DjangoFilterBackend,)
+    filters_class = IngredientFilter
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
     """Вьюсет модели Recipe: [GET, POST, DELETE, PATCH]."""
     queryset = Recipe.objects.all()
     permission_classes = (IsOwnerOrAdminOrReadOnly, )
-    filter_backends = (DjangoFilterBackend, filters.SearchFilter,
-                       filters.OrderingFilter)
-    filterset_fields = ('tags',)
-    search_fields = ('^ingredients__name',)
+    filter_backends = (DjangoFilterBackend, filters.OrderingFilter, )
+    filterset_class = RecipeFilter
     ordering = ('-id',)
 
     def get_serializer_class(self):
-        if self.request.method == 'GET':
+        if self.request.method in SAFE_METHODS:
             return RecipeListSerializer
         return RecipeWriteSerializer
 
-    @action(detail=True, methods=['post', 'delete', 'get'], )
+    @action(detail=True, methods=['post', 'delete'], permission_classes=[IsAuthenticated])
     def favorite(self, request, *args, **kwargs):
         """Получить / Добавить / Удалить  рецепт из избранного у текущего пользоватля."""
-        if request.method == 'GET':
-            if not self.request.user.is_anonymous:
-                favorite = Favorite.objects.filter(recipe=self.kwargs.get('pk'), author=request.user)
-                serializer = FavoriteSerializer(favorite, many=True)
-                return Response(serializer.data, status=status.HTTP_200_OK)
-            return Response('Пользователь не авторизован', status=status.HTTP_401_UNAUTHORIZED)
-        elif request.method == 'POST':
-            recipe = Recipe.objects.get(id=self.kwargs.get('pk'))
+        recipe = Recipe.objects.get(id=self.kwargs.get('pk'))
+        user = self.request.user
+        if request.method == 'POST':
+            if Favorite.objects.filter(author=user, recipe=recipe).exists():
+                return Response({'errors': 'Рецепт уже добавлен!'}, status=status.HTTP_400_BAD_REQUEST)
             serializer = FavoriteSerializer(data=request.data)
             if serializer.is_valid(raise_exception=True):
-                serializer.save(author=self.request.user, recipe=recipe)
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        Favorite.objects.get(recipe=self.kwargs.get('pk')).delete()
-        return Response(request.data, status=status.HTTP_204_NO_CONTENT)
-
-    @action(detail=False, methods=['get'], url_path='favorite')
-    def favorites(self, request, *args, **kwargs):
-        """Просмотп всех избранных рецептов пользователя."""
-        if not self.request.user.is_anonymous:
-            favorite = Favorite.objects.filter(author=request.user)
-            pages = self.paginate_queryset(favorite)
-            serializer = FavoriteSerializer(pages, many=True)
-            return self.get_paginated_response(serializer.data)
-        return Response('Пользователь не авторизован', status=status.HTTP_401_UNAUTHORIZED)
-
-    @action(detail=True, methods=['post', 'delete', 'get'])
-    def shopping_cart(self, request, **kwargs):
-        """Получить / Добавить / Удалить  рецепт из списка покупок у текущего пользоватля."""
-        if request.method == 'GET':
-            if not self.request.user.is_anonymous:
-                shopping_cart = ShoppingCart.objects.filter(recipe=self.kwargs.get('pk'), author=request.user)
-                serializer = ShoppingCartSerializer(shopping_cart, many=True)
-                return Response(serializer.data)
-            return Response('Пользователь не авторизован', status=status.HTTP_401_UNAUTHORIZED)
-        elif request.method == 'POST':
-            recipe = Recipe.objects.get(id=self.kwargs.get('pk'))
-            serializer = ShoppingCartSerializer(data=request.data)
-            if serializer.is_valid(raise_exception=True):
-                serializer.save(author=self.request.user, recipe=recipe)
+                serializer.save(author=user, recipe=recipe)
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         elif request.method == 'DELETE':
-            ShoppingCart.objects.get(recipe=self.kwargs.get('pk')).delete()
-            return Response(request.data, status=status.HTTP_204_NO_CONTENT)
+            if not Favorite.objects.filter(author=user, recipe=recipe).exists():
+                return Response({'errors': 'Объект не найден'}, status=status.HTTP_404_NOT_FOUND)
+            Favorite.objects.get(recipe=recipe).delete()
+            return Response('Рецепт успешно удалён из избранного.', status=status.HTTP_204_NO_CONTENT)
 
-    @action(detail=False)
+    @action(detail=True, methods=['post', 'delete'], permission_classes=[IsAuthenticated])
+    def shopping_cart(self, request, **kwargs):
+        """Получить / Добавить / Удалить  рецепт из списка покупок у текущего пользоватля."""
+        recipe = Recipe.objects.get(id=self.kwargs.get('pk'))
+        user = self.request.user
+        if request.method == 'POST':
+            if ShoppingCart.objects.filter(author=user, recipe=recipe).exists():
+                return Response({'errors': 'Рецепт уже добавлен!'}, status=status.HTTP_400_BAD_REQUEST)
+            serializer = ShoppingCartSerializer(data=request.data)
+            if serializer.is_valid(raise_exception=True):
+                serializer.save(author=user, recipe=recipe)
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        elif request.method == 'DELETE':
+            if not ShoppingCart.objects.filter(author=user, recipe=recipe).exists():
+                return Response({'errors': 'Объект не найден'}, status=status.HTTP_404_NOT_FOUND)
+            ShoppingCart.objects.get(recipe=recipe).delete()
+            return Response('Рецепт успешно удалён из списка покупок.', status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def download_shopping_cart(self, request):
+        """Скачать список покупок для выбранных рецептов, данные суммируются."""
         author = User.objects.get(id=self.request.user.pk)
-        if not self.request.user.is_anonymous or self.request.user == author:
+        if author.shopping_cart.exists():
             return shopping_cart(self, request, author)
-        return Response('Пользователь не авторизован', status=status.HTTP_401_UNAUTHORIZED)
+        return Response('Список покупок пуст.', status=status.HTTP_404_NOT_FOUND)

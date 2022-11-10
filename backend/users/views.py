@@ -2,36 +2,31 @@ from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import action
-from rest_framework import mixins
 from djoser.serializers import SetPasswordSerializer
+from rest_framework.permissions import IsAuthenticated
+from api.paginations import ApiPagination
 
 from recipes.models import Follow
 from users.models import User
-from users.serializers import UserSerializer, FollowSerializer, CreateUserSerializer
+from users.serializers import FollowSerializer, UserSerializer
 from api.permissions import IsCurrentUserOrAdminOrReadOnly
 
 
-class UserViewSet(mixins.CreateModelMixin,
-                  mixins.RetrieveModelMixin,
-                  mixins.ListModelMixin,
-                  viewsets.GenericViewSet):
+class UserViewSet(viewsets.ModelViewSet):
+    """Viewset для пользователя / подписок."""
     queryset = User.objects.all()
     permission_classes = (IsCurrentUserOrAdminOrReadOnly, )
+    pagination_class = ApiPagination
+    serializer_class = UserSerializer
 
-    def get_serializer_class(self):
-        if self.request.method == 'GET':
-            return UserSerializer
-        return CreateUserSerializer
-
-    @action(detail=False, methods=['get'])
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def me(self, request):
-        if not self.request.user.is_anonymous:
-            user = self.request.user
-            serializer = UserSerializer(user)
-            return Response(serializer.data)
-        return Response('Пользователь не авторизован', status=status.HTTP_401_UNAUTHORIZED)
+        """Кастомное получение профиля пользователя."""
+        user = self.request.user
+        serializer = UserSerializer(user, context={'request': request})
+        return Response(serializer.data)
 
-    @action(["post"], detail=False)
+    @action(["post"], detail=False, permission_classes=[IsAuthenticated])
     def set_password(self, request, *args, **kwargs):
         """Кастомное изменение пароля с помощью cериалайзера из пакета djoser SetPasswordSerializer."""
         serializer = SetPasswordSerializer(data=request.data, context={'request': request})
@@ -41,30 +36,28 @@ class UserViewSet(mixins.CreateModelMixin,
             return Response('Пароль успешно изменен', status=status.HTTP_204_NO_CONTENT)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    @action(detail=True, methods=['post', 'delete'])
-    def subscribe(self, request, **kwargs):
+    @action(detail=True, methods=['post', 'delete'], permission_classes=[IsAuthenticated])
+    def subscribe(self, request, *args, **kwargs):
         """Создание и удаление подписки ."""
         author = User.objects.get(id=self.kwargs.get('pk'))
         user = self.request.user
         if request.method == 'POST':
-            serializer = FollowSerializer(data=request.data)
+            serializer = FollowSerializer(data=request.data, context={'request': request, 'author': author})
             if serializer.is_valid(raise_exception=True):
                 serializer.save(author=author, user=user)
                 content = {'Подписка успешно создана': serializer.data}
                 return Response(content, status=status.HTTP_201_CREATED)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        if request.method == 'DELETE':
+            return Response({'errors': 'Объект не найден'}, status=status.HTTP_404_NOT_FOUND)
+        elif request.method == 'DELETE':
             if Follow.objects.filter(author=author, user=user).exists():
                 Follow.objects.get(author=author).delete()
                 return Response('Успешная отписка', status=status.HTTP_204_NO_CONTENT)
-            return Response('Объект не найден', status=status.HTTP_404_NOT_FOUND)
+            return Response({'errors': 'Объект не найден'}, status=status.HTTP_404_NOT_FOUND)
 
-    @action(detail=False, methods=['get'])
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def subscriptions(self, request):
         """Отображает все подписки пользователя."""
-        if not self.request.user.is_anonymous:
-            follows = Follow.objects.filter(user=self.request.user)
-            pages = self.paginate_queryset(follows)
-            serializer = FollowSerializer(pages, many=True)
-            return self.get_paginated_response(serializer.data)
-        return Response('Пользователь не авторизован', status=status.HTTP_401_UNAUTHORIZED)
+        follows = Follow.objects.filter(user=self.request.user)
+        pages = self.paginate_queryset(follows)
+        serializer = FollowSerializer(pages, many=True, context={'request': request})
+        return self.get_paginated_response(serializer.data)
