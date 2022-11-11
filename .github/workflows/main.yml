@@ -90,11 +90,9 @@ jobs:
             sudo docker compose stop
             sudo docker-compose rm web
             sudo docker-compose rm frontend
-            sudo docker-compose pull krivse/foodgram-backend:latest
-            sudo docker-compose pull krivse/foodgram-frontend:latest
-            sudo docker compose up -d --build
-            docker-compose exec web python manage.py migrate
-            docker-compose exec web python manage.py collectstatic --no-input
+            sudo docker-compose pull web
+            sudo docker-compose pull frontend
+            sudo docker compose up -d
 
   send_message:
     runs-on: ubuntu-latest
