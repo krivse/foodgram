@@ -7,6 +7,7 @@ from rest_framework.decorators import action
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
 from rest_framework.permissions import IsAuthenticated, SAFE_METHODS
+from django.shortcuts import get_object_or_404
 
 from recipes.models import (Recipe, Tag, Ingredient,
                             Favorite, ShoppingCart, User)
@@ -25,7 +26,6 @@ class TagViewSet(mixins.ListModelMixin,
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     permission_classes = (AllowAny, )
-    pagination_class = None
 
 
 class IngredientViewSet(mixins.ListModelMixin,
@@ -35,7 +35,6 @@ class IngredientViewSet(mixins.ListModelMixin,
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     permission_classes = (AllowAny, )
-    pagination_class = None
     filter_backends = (DjangoFilterBackend,)
     filters_class = IngredientFilter
 
@@ -61,7 +60,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         Получить / Добавить / Удалить  рецепт
         из избранного у текущего пользоватля.
         """
-        recipe = Recipe.objects.get(id=self.kwargs.get('pk'))
+        recipe = get_object_or_404(Recipe, id=self.kwargs.get('pk'))
         user = self.request.user
         if request.method == 'POST':
             if Favorite.objects.filter(author=user,
@@ -91,7 +90,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         Получить / Добавить / Удалить  рецепт
         из списка покупок у текущего пользоватля.
         """
-        recipe = Recipe.objects.get(id=self.kwargs.get('pk'))
+        recipe = get_object_or_404(Recipe, id=self.kwargs.get('pk'))
         user = self.request.user
         if request.method == 'POST':
             if ShoppingCart.objects.filter(author=user,

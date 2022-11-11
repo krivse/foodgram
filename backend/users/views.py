@@ -5,6 +5,7 @@ from rest_framework.decorators import action
 from djoser.serializers import SetPasswordSerializer
 from rest_framework.permissions import IsAuthenticated
 from api.paginations import ApiPagination
+from django.shortcuts import get_object_or_404
 
 from recipes.models import Follow
 from users.models import User
@@ -51,7 +52,7 @@ class UserViewSet(viewsets.ModelViewSet):
             permission_classes=[IsAuthenticated])
     def subscribe(self, request, *args, **kwargs):
         """Создание и удаление подписки."""
-        author = User.objects.get(id=self.kwargs.get('pk'))
+        author = get_object_or_404(User, id=self.kwargs.get('pk'))
         user = self.request.user
         if request.method == 'POST':
             serializer = FollowSerializer(
@@ -77,6 +78,7 @@ class UserViewSet(viewsets.ModelViewSet):
         """Отображает все подписки пользователя."""
         follows = Follow.objects.filter(user=self.request.user)
         pages = self.paginate_queryset(follows)
-        serializer = FollowSerializer(pages, many=True,
+        serializer = FollowSerializer(pages,
+                                      many=True,
                                       context={'request': request})
         return self.get_paginated_response(serializer.data)

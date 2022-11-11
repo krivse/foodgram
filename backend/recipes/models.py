@@ -17,7 +17,8 @@ class Ingredient(models.Model):
         help_text='Введите единицу измерения')
 
     class Meta:
-        verbose_name = "Ингредиент"
+        ordering = ['id']
+        verbose_name = 'Ингредиент'
         verbose_name_plural = 'Ингредиенты'
 
     def __str__(self):
@@ -50,6 +51,7 @@ class Tag(models.Model):
         help_text='Укажите уникальный слаг')
 
     class Meta:
+        ordering = ['id']
         verbose_name = "Тег"
         verbose_name_plural = 'Теги'
 
@@ -81,7 +83,8 @@ class Recipe(models.Model):
     name = models.CharField(
         verbose_name='Название рецепта',
         max_length=200,
-        help_text='Введите название рецепта')
+        help_text='Введите название рецепта',
+        db_index=True)
     cooking_time = models.PositiveSmallIntegerField(
         verbose_name='Время приготовления',
         validators=[MinValueValidator(1, 'Минимальное время приготовления')],
@@ -97,7 +100,7 @@ class Recipe(models.Model):
     class Meta:
         ordering = ['-id']
         default_related_name = 'recipe'
-        verbose_name = "Рецепт"
+        verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
         constraints = [
             models.UniqueConstraint(
@@ -132,8 +135,8 @@ class IngredientRecipe(models.Model):
         help_text='Укажите количество ингредиента')
 
     class Meta:
-        verbose_name = "Cостав рецепта"
-        verbose_name_plural = "Состав рецепта"
+        verbose_name = 'Cостав рецепта'
+        verbose_name_plural = 'Состав рецепта'
         constraints = [
             models.UniqueConstraint(
                 fields=['recipe', 'ingredient'],

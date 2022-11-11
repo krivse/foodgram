@@ -148,7 +148,7 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         ingredients = value
         if not ingredients:
             raise ValidationError(
-                {'ingredients': 'Нужен выбрать ингредиент!'})
+                {'ingredients': 'Нужно выбрать ингредиент!'})
         ingredients_list = []
         for item in ingredients:
             ingredient = get_object_or_404(Ingredient, name=item['id'])
@@ -180,31 +180,27 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
             instance.recipe_ingredients.all(), many=True).data
         return ingredients
 
+    def add_tags_ingredients(self, validated_data, model):
+        ingredients = validated_data.pop('ingredients')
+        tags = validated_data.pop('tags')
+        for ingredient in ingredients:
+            IngredientRecipe.objects.create(
+                recipe=model,
+                ingredient=ingredient['id'],
+                amount=ingredient['amount'])
+        model.tags.set(tags)
+
     def create(self, validated_data):
         author = self.context.get('request').user
-        tags = validated_data.pop('tags')
-        ingredients = validated_data.pop('ingredients')
         recipe = Recipe.objects.create(
             **validated_data,
             author=author)
-        recipe.tags.set(tags)
-        for ingredient in ingredients:
-            IngredientRecipe.objects.create(
-                recipe=recipe,
-                ingredient=ingredient['id'],
-                amount=ingredient['amount'])
+        self.add_tags_ingredients(validated_data, recipe)
         return recipe
 
     def update(self, instance, validated_data):
-        tags = validated_data.pop('tags')
-        ingredients = validated_data.pop('ingredients')
         instance.ingredients.clear()
-        for ingredient in ingredients:
-            IngredientRecipe.objects.create(
-                recipe=instance,
-                ingredient=ingredient['id'],
-                amount=ingredient['amount'])
-        instance.tags.set(tags)
+        self.add_tags_ingredients(validated_data, instance)
         return super().update(instance, validated_data)
 
 
