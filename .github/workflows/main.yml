@@ -92,10 +92,10 @@ jobs:
             sudo docker-compose rm frontend
             sudo docker-compose pull web
             sudo docker-compose pull frontend
-            sudo docker compose up -d --build
+            sudo docker compose up -d
+            docker-compose exec web python manage.py makemigrations
             docker-compose exec web python manage.py migrate
             docker-compose exec web python manage.py collectstatic --no-input
-            docker compose exec web python manage.py loaddata prepared_base.json
 
   send_message:
     runs-on: ubuntu-latest
