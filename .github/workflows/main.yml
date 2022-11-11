@@ -44,7 +44,7 @@ jobs:
         with:
           context: ./backend
           push: true
-          tags: krivse/foodgram_backend:latest
+          tags: krivse/foodgram-backend:latest
 
   build_and_push_frontend_to_docker_hub:
     name: Pushing frontend image to Docker Hub
@@ -90,7 +90,9 @@ jobs:
             sudo docker compose stop
             sudo docker-compose rm web
             sudo docker-compose rm frontend
-            sudo docker compose up -d --build
+            sudo docker-compose pull web
+            sudo docker-compose pull frontend
+            sudo docker compose up -d 
             docker-compose exec web python manage.py migrate
             docker-compose exec web python manage.py collectstatic --no-input
             docker compose exec web python manage.py loaddata prepared_base.json
