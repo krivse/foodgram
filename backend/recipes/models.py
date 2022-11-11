@@ -99,9 +99,10 @@ class Recipe(models.Model):
         default_related_name = 'recipe'
         verbose_name = "Рецепт"
         verbose_name_plural = 'Рецепты'
-        constraints = [models.UniqueConstraint(
-               fields=['name', 'author'],
-               name='unique_recipe')]
+        constraints = [
+            models.UniqueConstraint(
+                fields=['name', 'author'],
+                name='unique_recipe')]
 
     def __str__(self):
         return f'{self.name}'
@@ -133,7 +134,8 @@ class IngredientRecipe(models.Model):
     class Meta:
         verbose_name = "Cостав рецепта"
         verbose_name_plural = "Состав рецепта"
-        constraints = [models.UniqueConstraint(
+        constraints = [
+            models.UniqueConstraint(
                 fields=['recipe', 'ingredient'],
                 name='unique_ingredients')]
 
