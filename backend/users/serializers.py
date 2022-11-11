@@ -17,7 +17,8 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('email', 'id', 'username', 'first_name', 'last_name', 'password', 'is_subscribed')
+        fields = ('email', 'id', 'username', 'first_name',
+                  'last_name', 'password', 'is_subscribed')
         extra_kwargs = {'password': {'write_only': True},
                         'is_subscribed': {'read_only': True}}
 
@@ -28,8 +29,7 @@ class UserSerializer(serializers.ModelSerializer):
         return False
 
     def create(self, validated_data):
-        user = User.objects.create_user(**validated_data)
-        return user
+        return User.objects.create_user(**validated_data)
 
 
 class FollowSerializer(serializers.ModelSerializer):
@@ -45,12 +45,15 @@ class FollowSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Follow
-        fields = ('email', 'id', 'username', 'first_name', 'last_name', 'is_subscribed', 'recipes', 'recipes_count')
+        fields = ('email', 'id', 'username', 'first_name',
+                  'last_name', 'is_subscribed', 'recipes', 'recipes_count')
 
     def get_is_subscribed(self, obj):
         user = self.context.get('request').user
         if not user.is_anonymous:
-            return Follow.objects.filter(user=obj.user, author=obj.author).exists()
+            return Follow.objects.filter(
+                user=obj.user,
+                author=obj.author).exists()
         return False
 
     def get_recipes(self, obj):
@@ -67,8 +70,14 @@ class FollowSerializer(serializers.ModelSerializer):
     def validate(self, data):
         author = self.context.get('author')
         user = self.context.get('request').user
-        if Follow.objects.filter(author=author, user=user).exists():
-            raise ValidationError(detail='Вы уже подписаны на этого пользователя!', code=status.HTTP_400_BAD_REQUEST)
+        if Follow.objects.filter(
+                author=author,
+                user=user).exists():
+            raise ValidationError(
+                detail='Вы уже подписаны на этого пользователя!',
+                code=status.HTTP_400_BAD_REQUEST)
         if user == author:
-            raise ValidationError(detail='Невозможно подписаться на себя!', code=status.HTTP_400_BAD_REQUEST)
+            raise ValidationError(
+                detail='Невозможно подписаться на себя!',
+                code=status.HTTP_400_BAD_REQUEST)
         return data

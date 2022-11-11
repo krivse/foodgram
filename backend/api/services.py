@@ -16,10 +16,11 @@ def shopping_cart(self, request, author):
     today = date.today().strftime("%d-%m-%Y")
     shopping_list = f'Список покупок на: {today}\n\n'
     for ingredient in sum_ingredients_in_recipes:
-        print(ingredient)
-        shopping_list += f'{ingredient["ingredient__name"]} - ' \
-                         f'{ingredient["amounts"]} ' \
-                         f'{ingredient["ingredient__measurement_unit"]}\n'
+        shopping_list += (
+            f'{ingredient["ingredient__name"]} - '
+            f'{ingredient["amounts"]} '
+            f'{ingredient["ingredient__measurement_unit"]}\n'
+        )
     shopping_list += '\n\nFoodgram (2022)'
     filename = 'shopping_list.txt'
     response = HttpResponse(shopping_list, content_type='text/plain')
