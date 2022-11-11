@@ -44,7 +44,7 @@ jobs:
         with:
           context: ./backend
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/foodgram_backend:v1.2
+          tags: krivse/foodgram_backend:v1.2
 
   build_and_push_frontend_to_docker_hub:
     name: Pushing frontend image to Docker Hub
@@ -66,7 +66,7 @@ jobs:
         with:
           context: ./frontend
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/foodgram-frontend:v1.0
+          tags: krivse/foodgram-frontend:v1.0
 
   deploy:
     runs-on: ubuntu-latest
