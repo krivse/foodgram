@@ -17,6 +17,7 @@ from api.serializers import (RecipeListSerializer, TagSerializer,
 from api.services import shopping_cart
 from api.permissions import IsOwnerOrAdminOrReadOnly
 from api.filters import IngredientFilter, RecipeFilter
+from api.paginations import ApiPagination
 
 
 class TagViewSet(mixins.ListModelMixin,
@@ -44,6 +45,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     permission_classes = (IsOwnerOrAdminOrReadOnly, )
     filter_backends = (DjangoFilterBackend, filters.OrderingFilter, )
+    pagination_class = ApiPagination
     filterset_class = RecipeFilter
     ordering = ('-id',)
 

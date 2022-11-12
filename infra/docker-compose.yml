@@ -9,25 +9,24 @@ services:
       - ./.env
 
   frontend:
-#    build:
+#   build:
 #      context: ../frontend
 #      dockerfile: Dockerfile
-    image: krivse/foodgram-frontend:latest
-    volumes:
-      - ../frontend/:/app/result_build/
-    depends_on:
+   image: krivse/foodgram-frontend:latest
+   volumes:
+     - ../frontend/:/app/result_build/
+   depends_on:
       - db
 
   web:
-    image: krivse/foodgram-backend:latest
-    restart: always
 #    build:
 #      context: ../backend
 #      dockerfile: Dockerfile
+    image: krivse/foodgram-backend:v1.3
+    restart: always
     volumes:
       # web работает с файлом из этой директории в контейнере
-      - static_value:/app/static/admin/
-      - static_value:/app/static/rest_framework/
+      - static_value:/app/static/
       - media_value:/app/media/
     depends_on:
       - frontend

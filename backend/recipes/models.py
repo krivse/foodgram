@@ -9,7 +9,8 @@ class Ingredient(models.Model):
     """Ингридиенты для рецептов."""
     name = models.CharField(
         verbose_name='Название ингредиента',
-        max_length=200, db_index=True,
+        max_length=200,
+        db_index=True,
         help_text='Введите название ингредиента')
     measurement_unit = models.CharField(
         verbose_name='Единица измерения',
@@ -51,7 +52,6 @@ class Tag(models.Model):
         help_text='Укажите уникальный слаг')
 
     class Meta:
-        ordering = ['id']
         verbose_name = "Тег"
         verbose_name_plural = 'Теги'
 
@@ -106,9 +106,6 @@ class Recipe(models.Model):
             models.UniqueConstraint(
                 fields=['name', 'author'],
                 name='unique_recipe')]
-
-    def __str__(self):
-        return f'{self.name}'
 
 
 class IngredientRecipe(models.Model):

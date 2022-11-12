@@ -144,7 +144,7 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipe
         fields = ('ingredients', 'tags', 'image',
-                  'name', 'text', 'cooking_time')
+                  'name', 'text', 'cooking_time', 'author')
 
     def validate_ingredients(self, value):
         ingredients = value
@@ -182,25 +182,26 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
             instance.recipe_ingredients.all(), many=True).data
         return ingredients
 
-    def add_tags_ingredients(self, validated_data, model):
-        ingredients = validated_data.pop('ingredients')
-        tags = validated_data.pop('tags')
+    def add_tags_ingredients(self, ingredients, tags, model):
         for ingredient in ingredients:
-            IngredientRecipe.objects.create(
+            IngredientRecipe.objects.update_or_create(
                 recipe=model,
                 ingredient=ingredient['id'],
                 amount=ingredient['amount'])
         model.tags.set(tags)
 
     def create(self, validated_data):
-        recipe = Recipe.objects.create(
-            **validated_data)
-        self.add_tags_ingredients(validated_data, recipe)
+        ingredients = validated_data.pop('ingredients')
+        tags = validated_data.pop('tags')
+        recipe = super().create(validated_data)
+        self.add_tags_ingredients(ingredients, tags, recipe)
         return recipe
 
     def update(self, instance, validated_data):
+        ingredients = validated_data.pop('ingredients')
+        tags = validated_data.pop('tags')
         instance.ingredients.clear()
-        self.add_tags_ingredients(validated_data, instance)
+        self.add_tags_ingredients(ingredients, tags, instance)
         return super().update(instance, validated_data)
 
 
