@@ -5,7 +5,6 @@ from rest_framework import mixins
 from rest_framework.permissions import AllowAny
 from rest_framework.decorators import action
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters
 from rest_framework.permissions import IsAuthenticated, SAFE_METHODS
 from django.shortcuts import get_object_or_404
 
