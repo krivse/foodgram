@@ -1,4 +1,4 @@
-version: '3.8'
+version: '3.3'
 
 services:
   db:
@@ -35,7 +35,7 @@ services:
       - static_value:/var/html/static/
       - media_value:/var/html/media/
       - ../frontend/build:/usr/share/nginx/html/
-      - ../docs/redoc.html:/usr/share/nginx/html/api/docs/redoc.html
+      - ../docs/:/usr/share/nginx/html/docs/
     depends_on:
       - web
 
