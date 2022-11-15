@@ -44,10 +44,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
     """Вьюсет модели Recipe: [GET, POST, DELETE, PATCH]."""
     queryset = Recipe.objects.all()
     permission_classes = (IsOwnerOrAdminOrReadOnly, )
-    filter_backends = (DjangoFilterBackend, filters.OrderingFilter, )
+    filter_backends = (DjangoFilterBackend, )
     pagination_class = ApiPagination
     filterset_class = RecipeFilter
-    ordering = ('-id',)
 
     def get_serializer_class(self):
         if self.request.method in SAFE_METHODS:
