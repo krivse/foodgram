@@ -21,6 +21,7 @@ services:
     volumes:
       - static_value:/app/static/
       - media_value:/app/media/
+      - redoc:/app/docs/
     depends_on:
       - frontend
     env_file:
@@ -35,7 +36,7 @@ services:
       - static_value:/var/html/static/
       - media_value:/var/html/media/
       - ../frontend/build:/usr/share/nginx/html/
-      - ../docs/:/usr/share/nginx/html/docs/
+      - redoc:/usr/share/nginx/html/docs/
     depends_on:
       - web
 
@@ -43,3 +44,4 @@ volumes:
   static_value:
   media_value:
   db_data:
+  redoc:
