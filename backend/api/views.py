@@ -15,7 +15,7 @@ from api.serializers import (RecipeListSerializer, TagSerializer,
                              ShoppingCartSerializer, RecipeWriteSerializer)
 from api.services import shopping_cart
 from api.permissions import IsOwnerOrAdminOrReadOnly
-from api.filters import IngredientFilter, RecipeFilter
+from api.filters import IngredientSearchFilter, RecipeFilter
 from api.paginations import ApiPagination
 
 
@@ -35,8 +35,8 @@ class IngredientViewSet(mixins.ListModelMixin,
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     permission_classes = (AllowAny, )
-    filter_backends = (DjangoFilterBackend,)
-    filters_class = IngredientFilter
+    filter_backends = (IngredientSearchFilter, )
+    search_fields = ('^name',)
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
