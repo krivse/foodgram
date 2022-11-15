@@ -9,9 +9,6 @@ services:
       - ./.env
 
   frontend:
-#   build:
-#      context: ../frontend
-#      dockerfile: Dockerfile
    image: krivse/foodgram-frontend:v1.1
    volumes:
      - ../frontend/:/app/result_build/
@@ -19,15 +16,12 @@ services:
       - db
 
   web:
-#    build:
-#      context: ../backend
-#      dockerfile: Dockerfile
     image: krivse/foodgram-backend:v1.3
     restart: always
     volumes:
-      # web работает с файлом из этой директории в контейнере
       - static_value:/app/static/
       - media_value:/app/media/
+      - redoc:/app/docs/
     depends_on:
       - frontend
     env_file:
@@ -42,8 +36,7 @@ services:
       - static_value:/var/html/static/
       - media_value:/var/html/media/
       - ../frontend/build:/usr/share/nginx/html/
-      # из этой директории nginx отдаёт файл
-      - ../docs:/usr/share/nginx/html/api/docs/
+      - redoc:/usr/share/nginx/html/docs/
     depends_on:
       - web
 
@@ -51,3 +44,4 @@ volumes:
   static_value:
   media_value:
   db_data:
+  redoc:
