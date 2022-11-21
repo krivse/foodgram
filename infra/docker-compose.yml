@@ -16,7 +16,7 @@ services:
       - db
 
   web:
-    image: krivse/foodgram-backend:v1.3
+    image: krivse/foodgram-backend:v1.4
     restart: always
     volumes:
       - static_value:/app/static/
